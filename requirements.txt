@@ -1,0 +1,4 @@
+deprecation==2.1.0
+packaging==24.1
+python-dotenv==1.0.1
+splunk-sdk==2.0.2
