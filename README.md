@@ -1,5 +1,5 @@
 
-# CSV to Splunk Lookup Uploader
+# CSV to Splunk Lookup Importer
 
 To make it easier to upload CSV files as lookups in Splunk remotely, I developed a solution using SPL (Splunk Processing Language). This approach worked well for me, and I’m sharing it in hopes that it will help others in the community too.
 
