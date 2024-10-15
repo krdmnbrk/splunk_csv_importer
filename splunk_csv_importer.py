@@ -14,6 +14,9 @@ load_dotenv()
 SPLUNK_HOST = os.getenv("SPLUNK_HOST")
 SPLUNK_PORT = os.getenv("SPLUNK_PORT")
 SPLUNK_TOKEN = os.getenv("SPLUNK_TOKEN")
+SPLUNK_USERNAME = os.getenv("SPLUNK_USERNAME")
+SPLUNK_PASSWORD = os.getenv("SPLUNK_PASSWORD")
+UNIQUE_DELIMITER = os.getenv("UNIQUE_DELIMITER")
 
 
 def csv_to_dict(csv_file_path):
@@ -34,7 +37,7 @@ def csv_to_dict(csv_file_path):
 
         for row in reader:
             for column in reader.fieldnames:
-                result_dict[column].append(row[column])
+                result_dict[column].append(row[column] if row[column] else "-")
 
     print(f"CSV file read successfully: {len(result_dict)} columns found.")
     return result_dict
@@ -50,14 +53,20 @@ def oneshot_search(spl_query):
     Returns:
         list: List of search results as dictionaries.
     """
-    print(f"Executing search query: {spl_query[:50]}...")  # Only show first 50 characters of the query
     try:
-        # Connect to the Splunk service using token-based authentication
-        service = client.connect(
-            host=SPLUNK_HOST,
-            port=SPLUNK_PORT,
-            splunkToken=SPLUNK_TOKEN
-        )
+        if SPLUNK_TOKEN != '':
+            service = client.connect(
+                host=SPLUNK_HOST,
+                port=SPLUNK_PORT,
+                splunkToken=SPLUNK_TOKEN
+            )
+        else:
+            service = client.connect(
+                host=SPLUNK_HOST,
+                port=SPLUNK_PORT,
+                username=SPLUNK_USERNAME,
+                password=SPLUNK_PASSWORD
+            )
 
         # Execute the one-shot search with the specified query
         oneshot_search_results = service.jobs.oneshot(spl_query, output_mode='json')
@@ -70,7 +79,7 @@ def oneshot_search(spl_query):
         return search_results
 
     except AuthenticationError:
-        print(f"[ERROR] Authentication failed! Please check your .env file and ensure that the SPLUNK_HOST, SPLUNK_PORT, and SPLUNK_TOKEN are correct.")
+        print(f"[ERROR] Authentication failed! Please check your .env file and ensure that the SPLUNK_HOST, SPLUNK_PORT, and SPLUNK_TOKEN or SPLUNK_USERNAME, SPLUNK_PASSWORD are correct.")
         exit(1)
 
 
@@ -126,7 +135,7 @@ def generate_lookup(csv_file_path, lookup_name):
     SPL_TEMPLATE = """
     | makeresults
     | eval "{field}"="{data}"
-    | makemv delim="," "{field}"
+    | makemv delim="{delim}" "{field}"
     | mvexpand "{field}"
     """
 
@@ -137,7 +146,7 @@ def generate_lookup(csv_file_path, lookup_name):
     # Build the SPL (Splunk Processing Language) query
     spl_parts = []
     for index, (key, value) in enumerate(datas.items()):
-        spl_query = SPL_TEMPLATE.format(field=key, data=','.join(value))
+        spl_query = SPL_TEMPLATE.format(field=key, delim=UNIQUE_DELIMITER, data=UNIQUE_DELIMITER.join(value))
         if index > 0:
             spl_parts.append(f"| appendcols [{spl_query}]")
         else:

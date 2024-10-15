@@ -23,9 +23,23 @@ To make it easier to upload CSV files as lookups in Splunk remotely, I developed
 
 3. **Set up `.env`**:
     ```ini
-    SPLUNK_HOST=your-splunk-host
+    # Splunk instance's host (usually localhost or a specific IP)
+    SPLUNK_HOST=
+
+    # Splunk management port (usually 8089)
     SPLUNK_PORT=8089
-    SPLUNK_TOKEN=your-splunk-token
+
+    # Splunk token for authentication
+    SPLUNK_TOKEN=
+
+    # Splunk username & password for authentication
+    SPLUNK_USERNAME=
+    SPLUNK_PASSWORD=
+
+    # Unique delimiter for the SPL
+    # You don't need to change this unless you have a specific requirement.
+    # E.g if your data contains "|^|" you can change this to something else.
+    UNIQUE_DELIMITER=|^|
     ```
 
 ## Usage
